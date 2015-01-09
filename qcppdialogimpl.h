@@ -21,6 +21,8 @@
 
 #include "ui_cutecommdlg.h"
 
+#include <QProcess>
+
 #include <termios.h>
 
 #include <qsocketnotifier.h>
@@ -42,66 +44,68 @@ class QFileDialog;
 
 class QCPPDialogImpl:public QWidget, public Ui::CuteCommDlg
 {
-   Q_OBJECT
-   public:
-      QCPPDialogImpl(QWidget* parent);
-      virtual bool eventFilter(QObject* watched, QEvent *e);
-   protected slots:
-      void execCmd();
-      void readData(int fd);
-      void sendFile();
-      void showAboutMsg();
+    Q_OBJECT
+public:
+    QCPPDialogImpl(QWidget* parent);
+    virtual bool eventFilter(QObject* watched, QEvent *e);
+protected slots:
+    void execCmd();
+    void readData(int fd);
+    void sendFile();
+    void showAboutMsg();
 
-      void oldCmdClicked(QListWidgetItem* item);
-      void saveSettings();
-      void readFromStdout();
-      void readFromStderr();
-      void sendDone();
-      void connectTTY();
-      void disconnectTTY();
-      void killSz();
-      void enableSettingWidgets(bool enable);
-      void doOutput();
-      void sendKey();
-      void hexOutputClicked(bool on);
-      void enableLogging(bool on);
-      void chooseLogFile();
-      void clearOutput();
-   protected:
-      void fillBaudCb();
-      void addOutput(const QString& text);
-      bool sendByte(char c, unsigned int delay);
-      void disconnectTTYRestore(bool restore);
-      void readSettings();
-      void prevCmd();
-      void nextCmd();
-      bool sendString(const QString& s);
-      void setNewOptions(int baudrate, int databits, const QString& parity, const QString& stop, bool softwareHandshake, bool hardwareHandshake);
-      virtual void resizeEvent(QResizeEvent *e);
+    void oldCmdClicked(QListWidgetItem* item);
+    void saveSettings();
+    void readFromStdout();
+    void readFromStderr();
+    void sendDone(QProcess::ProcessState);
+    void connectTTY();
+    void disconnectTTY();
+    void killSz();
+    void enableSettingWidgets(bool enable);
+    void doOutput();
+    void sendKey();
+    void hexOutputClicked(bool on);
+    void enableLogging(bool on);
+    void chooseLogFile();
+    void clearOutput();
+protected:
+    void fillBaudCb();
+    void addOutput(const QString& text);
+    bool sendByte(char c, unsigned int delay);
+    void disconnectTTYRestore(bool restore);
+    void readSettings();
+    void prevCmd();
+    void nextCmd();
+    bool sendString(const QString& s);
+    void setNewOptions(int baudrate, int databits, const QString& parity, const QString& stop, bool softwareHandshake, bool hardwareHandshake);
+    virtual void resizeEvent(QResizeEvent *e);
 
-      bool m_isConnected;
-      int m_fd;
-      struct termios m_oldtio;
-      unsigned int m_cmdBufIndex;
-      QSocketNotifier *m_notifier;
-      char m_buf[CUTECOMM_BUFSIZE];
-      Q3Process *m_sz;
-      QProgressDialog *m_progress;
-      int m_progressStepSize;
 
-      QFileDialog *m_fileDlg;
-      QString m_sendFileDialogStartDir;
 
-      QTimer m_outputTimer;
-      QTime m_outputTimerStart;
-      QString m_outputBuffer;
+    bool m_isConnected;
+    int m_fd;
+    struct termios m_oldtio;
+    unsigned int m_cmdBufIndex;
+    QSocketNotifier *m_notifier;
+    char m_buf[CUTECOMM_BUFSIZE];
+    QProcess *m_sz;
+    QProgressDialog *m_progress;
+    int m_progressStepSize;
 
-      QTimer m_keyRepeatTimer;
-      char m_keyCode;
-      unsigned int m_hexBytes;
-      char m_previousChar;
+    QFileDialog *m_fileDlg;
+    QString m_sendFileDialogStartDir;
 
-      QFile m_logFile;
+    QTimer m_outputTimer;
+    QTime m_outputTimerStart;
+    QString m_outputBuffer;
+
+    QTimer m_keyRepeatTimer;
+    char m_keyCode;
+    unsigned int m_hexBytes;
+    char m_previousChar;
+
+    QFile m_logFile;
 
 };
 
