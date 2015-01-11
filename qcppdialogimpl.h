@@ -81,7 +81,7 @@ protected:
     void setNewOptions(int baudrate, int databits, const QString& parity, const QString& stop, bool softwareHandshake, bool hardwareHandshake);
     virtual void resizeEvent(QResizeEvent *e);
 
-
+    void readFromFile();
 
     bool m_isConnected;
     int m_fd;

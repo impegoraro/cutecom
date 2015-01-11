@@ -35,6 +35,7 @@
 #include <qregexp.h>
 #include <qspinbox.h>
 #include <QProcess>
+#include <QDebug>
 //Added by qt3to4:
 #include <QKeyEvent>
 #include <QResizeEvent>
@@ -146,7 +147,7 @@ QCPPDialogImpl::QCPPDialogImpl(QWidget* parent)
     readSettings();
 
     disconnectTTY();
-
+readFromFile();
     m_cmdLe->installEventFilter(this);
 }
 
@@ -1443,3 +1444,35 @@ void QCPPDialogImpl::chooseLogFile()
     }
 }
 
+
+void QCPPDialogImpl::readFromFile()
+{
+    QFile file("/home/ilan/mg.ptp");
+    file.open(QIODevice::ReadOnly);
+    int i = 0;
+    if(file.isOpen()) {
+        while(!file.atEnd()) {
+            QString nl(file.readLine());
+            nl.remove('\n');
+            nl.remove('\r');
+            if(nl.isEmpty()) {
+                continue;
+            } else if(nl == "SEND"){
+                file.readLine();
+                QString description(file.readLine());
+                description.remove("\n");
+                description.remove("\r");
+                QString command(file.readLine());
+                command.remove("\n");
+                command.remove("\r");
+                //QListWidgetItem *item = new QListWidgetItem()
+
+                m_oldCmdsLb->addItemx(command + " | " + description);
+
+                i++;
+            }
+            //qDebug()<< nl;
+        }
+    }
+    qDebug()<< "Read Send Command "<< i<< " lines";
+}
