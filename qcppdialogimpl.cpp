@@ -1481,14 +1481,21 @@ void QCPPDialogImpl::readFromFile(QString fname)
         m_treeFileCmd->setModel(model);
         m_treeFileCmd->setColumnWidth(0, 60);
         m_treeFileCmd->setColumnWidth(1, 420);
-        QItemSelectionModel *selectionModel = m_treeFileCmd->selectionModel();
-        connect(selectionModel, SIGNAL(selectionChanged (const QItemSelection &, const QItemSelection &)),
-                this, SLOT(selectionChangedSlot(const QItemSelection &, const QItemSelection &)));
+        connect(m_treeFileCmd, SIGNAL(clicked(QModelIndex)), this, SLOT(treeFileCmdClicked(QModelIndex)));
         qDebug()<< "Read Send Command "<< i<< " lines";
     } else {
         qWarning()<< "Unable to open file '"<< fname<< "'";
     }
 
+}
+
+void QCPPDialogImpl::treeFileCmdClicked(QModelIndex index)
+{
+    QString selectedText = index.data(Qt::DisplayRole).toString();
+    if(selectedText == "->") {
+        sendString(index.sibling(index.row(), 2).data().toString());
+        // send command to tty
+    }
 }
 
 QList<QStandardItem *> QCPPDialogImpl::prepareRow(const QString &first, const QString &second)
@@ -1499,18 +1506,6 @@ QList<QStandardItem *> QCPPDialogImpl::prepareRow(const QString &first, const QS
     rowItems << new QStandardItem(second);
     return rowItems;
 }
-
-void QCPPDialogImpl::selectionChangedSlot(const QItemSelection &current, const QItemSelection &previous)
-{
-    //get the text of the selected item
-    const QModelIndex index = m_treeFileCmd->selectionModel()->currentIndex();
-    QString selectedText = index.data(Qt::DisplayRole).toString();
-    if(selectedText == "->") {
-        sendString(index.sibling(index.row(), 2).data().toString());
-        // send command to tty
-    }
-}
-
 void QCPPDialogImpl::btnBrowseFileClicked()
 {
     QFileDialog dialog(this);

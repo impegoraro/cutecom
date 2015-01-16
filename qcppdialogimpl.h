@@ -70,7 +70,7 @@ protected slots:
     void chooseLogFile();
     void clearOutput();
 
-    void selectionChangedSlot(const QItemSelection &, const QItemSelection &);
+    void treeFileCmdClicked(QModelIndex);
     void btnBrowseFileClicked();
 protected:
     void fillBaudCb();
