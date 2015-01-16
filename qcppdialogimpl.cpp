@@ -36,6 +36,8 @@
 #include <qspinbox.h>
 #include <QProcess>
 #include <QDebug>
+#include <QStandardItem>
+#include <QTreeView>
 //Added by qt3to4:
 #include <QKeyEvent>
 #include <QResizeEvent>
@@ -137,17 +139,18 @@ QCPPDialogImpl::QCPPDialogImpl(QWidget* parent)
     //  TODO ? m_outputView->setWordWrap(Q3TextEdit::WidgetWidth);
 
     /*   QAccel* accel=new QAccel(this);
-   accel->insertItem(CTRL+Key_C, 3);
-   accel->insertItem(CTRL+Key_Q, 17);
-   accel->insertItem(CTRL+Key_S, 19);
-   connect(accel, SIGNAL(activated(int)), this, SLOT(sendByte(int)));*/
+    accel->insertItem(CTRL+Key_C, 3);
+    accel->insertItem(CTRL+Key_Q, 17);
+    accel->insertItem(CTRL+Key_S, 19);
+    connect(accel, SIGNAL(activated(int)), this, SLOT(sendByte(int)));*/
+    connect(btnBrowseFile, SIGNAL(clicked()), this, SLOT(btnBrowseFileClicked()));
 
     m_outputTimerStart.start();
 
     readSettings();
 
     disconnectTTY();
-readFromFile();
+
     m_cmdLe->installEventFilter(this);
 }
 
@@ -511,7 +514,7 @@ void QCPPDialogImpl::sendFile()
         args.append(tmp);
         //m_sz->addArgument(tmp);
         //m_sz->setCommunication(Q3Process::Stderr);
-        m_sz->setArguments(args);
+        //m_sz->setArguments(args);
         m_sz->setReadChannel(QProcess::StandardError);
         connect(m_sz, SIGNAL(readyRead()), this, SLOT(readFromStderr()));
         //connect(m_sz, SIGNAL(readyReadStderr()), this, SLOT(readFromStderr()));
@@ -1445,12 +1448,13 @@ void QCPPDialogImpl::chooseLogFile()
 }
 
 
-void QCPPDialogImpl::readFromFile()
+void QCPPDialogImpl::readFromFile(QString fname)
 {
-    QFile file("/home/ilan/mg.ptp");
+    QFile file(fname);
     file.open(QIODevice::ReadOnly);
     int i = 0;
     if(file.isOpen()) {
+        QStandardItemModel *model = new QStandardItemModel;
         while(!file.atEnd()) {
             QString nl(file.readLine());
             nl.remove('\n');
@@ -1465,14 +1469,57 @@ void QCPPDialogImpl::readFromFile()
                 QString command(file.readLine());
                 command.remove("\n");
                 command.remove("\r");
-                //QListWidgetItem *item = new QListWidgetItem()
 
-                m_oldCmdsLb->addItemx(command + " | " + description);
+                QList<QStandardItem *> row = prepareRow(description, command);
+                model->appendRow(row);
+
 
                 i++;
             }
             //qDebug()<< nl;
         }
+        m_treeFileCmd->setModel(model);
+        m_treeFileCmd->setColumnWidth(0, 60);
+        m_treeFileCmd->setColumnWidth(1, 420);
+        QItemSelectionModel *selectionModel = m_treeFileCmd->selectionModel();
+        connect(selectionModel, SIGNAL(selectionChanged (const QItemSelection &, const QItemSelection &)),
+                this, SLOT(selectionChangedSlot(const QItemSelection &, const QItemSelection &)));
+        qDebug()<< "Read Send Command "<< i<< " lines";
+    } else {
+        qWarning()<< "Unable to open file '"<< fname<< "'";
     }
-    qDebug()<< "Read Send Command "<< i<< " lines";
+
+}
+
+QList<QStandardItem *> QCPPDialogImpl::prepareRow(const QString &first, const QString &second)
+{
+    QList<QStandardItem *> rowItems;
+    rowItems << new QStandardItem("->");
+    rowItems << new QStandardItem(first);
+    rowItems << new QStandardItem(second);
+    return rowItems;
+}
+
+void QCPPDialogImpl::selectionChangedSlot(const QItemSelection &current, const QItemSelection &previous)
+{
+    //get the text of the selected item
+    const QModelIndex index = m_treeFileCmd->selectionModel()->currentIndex();
+    QString selectedText = index.data(Qt::DisplayRole).toString();
+    if(selectedText == "->") {
+        sendString(index.sibling(index.row(), 2).data().toString());
+        // send command to tty
+    }
+}
+
+void QCPPDialogImpl::btnBrowseFileClicked()
+{
+    QFileDialog dialog(this);
+
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setNameFilter(tr("Images (*.ptp)"));
+    if(dialog.exec()) {
+        QStringList files = dialog.selectedFiles();
+        lblCurrentFile->setText(files[0]);
+        readFromFile(files[0]);
+    }
 }

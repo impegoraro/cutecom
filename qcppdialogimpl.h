@@ -22,7 +22,7 @@
 #include "ui_cutecommdlg.h"
 
 #include <QProcess>
-
+#include <QStandardItem>
 #include <termios.h>
 
 #include <qsocketnotifier.h>
@@ -69,6 +69,9 @@ protected slots:
     void enableLogging(bool on);
     void chooseLogFile();
     void clearOutput();
+
+    void selectionChangedSlot(const QItemSelection &, const QItemSelection &);
+    void btnBrowseFileClicked();
 protected:
     void fillBaudCb();
     void addOutput(const QString& text);
@@ -81,7 +84,8 @@ protected:
     void setNewOptions(int baudrate, int databits, const QString& parity, const QString& stop, bool softwareHandshake, bool hardwareHandshake);
     virtual void resizeEvent(QResizeEvent *e);
 
-    void readFromFile();
+    void readFromFile(QString fname);
+    QList<QStandardItem *> prepareRow(const QString &first, const QString &second);
 
     bool m_isConnected;
     int m_fd;

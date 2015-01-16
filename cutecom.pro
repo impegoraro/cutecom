@@ -19,5 +19,4 @@ SOURCES += \
 HEADERS  += \
     qcppdialogimpl.h
 
-FORMS += \
-    cutecommdlg.ui
+FORMS += cutecommdlg.ui
